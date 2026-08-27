@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
 content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>GTA Mobile V2</title>
+<title>GTA Mobile V3</title>
 
 <style>
 *{
@@ -21,8 +21,8 @@ html,body{
  width:100%;
  height:100%;
  overflow:hidden;
- background:#87b9df;
- font-family:Arial;
+ background:#82b6dc;
+ font-family:Arial,sans-serif;
 }
 
 canvas{
@@ -37,24 +37,12 @@ canvas{
 
 #stats{
  position:absolute;
- top:14px;
- left:14px;
- background:#111c;
- color:white;
- padding:11px 15px;
+ top:13px;
+ left:13px;
+ padding:10px 14px;
  border-radius:12px;
- font-size:15px;
-}
-
-#mission{
- position:absolute;
- top:14px;
- left:50%;
- transform:translateX(-50%);
- background:#111c;
- color:white;
- padding:11px 18px;
- border-radius:12px;
+ background:#101010bb;
+ color:#fff;
  font-size:14px;
 }
 
@@ -77,19 +65,20 @@ canvas{
  width:48px;
  height:48px;
  border-radius:50%;
- background:#fff;
+ background:#ffffffdd;
+ box-shadow:0 3px 12px #0007;
 }
 
 #look{
  position:absolute;
  right:0;
  top:0;
- width:58%;
+ width:60%;
  height:100%;
  pointer-events:auto;
 }
 
-#actions{
+#buttons{
  position:absolute;
  right:25px;
  bottom:25px;
@@ -98,42 +87,41 @@ canvas{
  pointer-events:auto;
 }
 
-.btn{
- width:72px;
- height:72px;
+button{
+ width:74px;
+ height:74px;
  border-radius:50%;
- border:2px solid #ffffff55;
- background:#111c;
+ border:2px solid #ffffff50;
+ background:#101010bb;
  color:white;
- font-weight:bold;
  font-size:12px;
+ font-weight:bold;
 }
 
-#car{
+#carButton{
  width:84px;
  height:84px;
- background:#126de0dd;
+ background:#146ddd;
 }
 
 #rotate{
  display:none;
  position:fixed;
  inset:0;
- background:#111;
- color:white;
  z-index:100;
- justify-content:center;
+ background:#111;
+ color:#fff;
  align-items:center;
+ justify-content:center;
  text-align:center;
  font-size:22px;
-}
-
-@media(max-height:500px){
- #rotate{display:none}
+ font-weight:bold;
 }
 
 @media(orientation:portrait){
- #rotate{display:flex}
+ #rotate{
+  display:flex;
+ }
 }
 </style>
 </head>
@@ -142,7 +130,7 @@ canvas{
 
 <div id="rotate">
  📱↔️<br><br>
- TURN PHONE SIDEWAYS
+ TURN YOUR PHONE SIDEWAYS
 </div>
 
 <div id="hud">
@@ -151,24 +139,22 @@ canvas{
   ❤️ 100 &nbsp; 💵 $250 &nbsp; ⭐ 0
  </div>
 
- <div id="mission">
-  🎯 Explore the city
- </div>
-
  <div id="joystick">
   <div id="stick"></div>
  </div>
 
  <div id="look"></div>
 
- <div id="actions">
-  <button class="btn" id="action">
+ <div id="buttons">
+
+  <button id="action">
    👊<br>ACTION
   </button>
 
-  <button class="btn" id="car">
+  <button id="carButton">
    🚗<br>CAR
   </button>
+
  </div>
 
 </div>
@@ -180,29 +166,30 @@ import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
 
-/* =========================================================
-   SCENE
-========================================================= */
+/* =====================================================
+   ENGINE
+===================================================== */
 
-const scene=new THREE.Scene();
+const scene=
+new THREE.Scene();
 
 scene.background=
-new THREE.Color(0x86b9dd);
+new THREE.Color(0x82b6dc);
 
 scene.fog=
 new THREE.Fog(
- 0x86b9dd,
- 70,
- 300
+ 0x82b6dc,
+ 75,
+ 340
 );
 
 
 const camera=
 new THREE.PerspectiveCamera(
- 60,
+ 62,
  innerWidth/innerHeight,
  .1,
- 700
+ 800
 );
 
 
@@ -212,7 +199,7 @@ new THREE.WebGLRenderer({
 });
 
 renderer.setPixelRatio(
- Math.min(devicePixelRatio,2)
+ Math.min(devicePixelRatio,1.8)
 );
 
 renderer.setSize(
@@ -230,28 +217,26 @@ document.body.appendChild(
 );
 
 
-/* =========================================================
-   LIGHT
-========================================================= */
+/* =====================================================
+   LIGHTING
+===================================================== */
 
 scene.add(
  new THREE.HemisphereLight(
   0xffffff,
-  0x43504a,
-  2.2
+  0x465247,
+  2.3
  )
 );
 
 const sun=
 new THREE.DirectionalLight(
   0xffffff,
-  2.5
+  2.6
 );
 
 sun.position.set(
- 100,
- 150,
- 80
+ 90,150,70
 );
 
 sun.castShadow=true;
@@ -259,19 +244,24 @@ sun.castShadow=true;
 sun.shadow.mapSize.width=2048;
 sun.shadow.mapSize.height=2048;
 
+sun.shadow.camera.left=-180;
+sun.shadow.camera.right=180;
+sun.shadow.camera.top=180;
+sun.shadow.camera.bottom=-180;
+
 scene.add(sun);
 
 
-/* =========================================================
-   MATERIAL
-========================================================= */
+/* =====================================================
+   MATERIAL HELPERS
+===================================================== */
 
-function material(color){
+function M(color){
 
  return new THREE.MeshStandardMaterial({
-  color,
+  color:color,
   roughness:.75,
-  metalness:.05
+  metalness:.04
  });
 }
 
@@ -279,44 +269,45 @@ function material(color){
 function box(
  w,h,d,
  color,
- x,y,z
+ x,y,z,
+ material=null
 ){
 
- const m=
+ const mesh=
  new THREE.Mesh(
   new THREE.BoxGeometry(
    w,h,d
   ),
-  material(color)
+  material || M(color)
  );
 
- m.position.set(
+ mesh.position.set(
   x,y,z
  );
 
- m.castShadow=true;
- m.receiveShadow=true;
+ mesh.castShadow=true;
+ mesh.receiveShadow=true;
 
- scene.add(m);
+ scene.add(mesh);
 
- return m;
+ return mesh;
 }
 
 
-/* =========================================================
-   WORLD
-========================================================= */
+/* =====================================================
+   GROUND
+===================================================== */
 
 box(
- 400,.3,400,
- 0x427747,
+ 420,.3,420,
+ 0x3f7444,
  0,-.15,0
 );
 
 
-/* =========================================================
+/* =====================================================
    ROADS
-========================================================= */
+===================================================== */
 
 function road(
  w,d,x,z
@@ -324,76 +315,82 @@ function road(
 
  box(
   w,.08,d,
-  0x292c30,
+  0x292d31,
   x,.02,z
  );
 }
 
 
-/* large roads */
+road(26,420,0,0);
+road(420,26,0,0);
 
-road(24,400,0,0);
-road(400,24,0,0);
+road(18,420,90,0);
+road(18,420,-90,0);
 
-road(18,400,85,0);
-road(18,400,-85,0);
-
-road(400,18,0,85);
-road(400,18,0,-85);
+road(420,18,0,90);
+road(420,18,0,-90);
 
 
-/* =========================================================
-   SIDEWALKS
-========================================================= */
+/* =====================================================
+   CURBS
+===================================================== */
 
-function sidewalk(
+function curb(
  w,d,x,z
 ){
 
  box(
-  w,.22,d,
-  0x85888a,
-  x,.12,z
+  w,.32,d,
+  0x777a7d,
+  x,.16,z
  );
 }
 
 
-sidewalk(5,400,15,0);
-sidewalk(5,400,-15,0);
+curb(5,420,17,0);
+curb(5,420,-17,0);
 
-sidewalk(400,5,0,15);
-sidewalk(400,5,0,-15);
+curb(420,5,0,17);
+curb(420,5,0,-17);
 
 
-/* =========================================================
-   ROAD LINES
-========================================================= */
+/* =====================================================
+   ROAD CENTER MARKINGS
+===================================================== */
+
+const roadLine=
+M(0xf1d98d);
+
 
 for(
- let i=-190;
- i<190;
- i+=13
+ let i=-200;
+ i<200;
+ i+=12
 ){
 
  box(
-  .5,.045,6,
-  0xf0d993,
-  0,.11,i
+  .5,.045,5.5,
+  0xf1d98d,
+  0,.11,i,
+  roadLine
  );
 
  box(
-  6,.045,.5,
-  0xf0d993,
-  i,.11,0
+  5.5,.045,.5,
+  0xf1d98d,
+  i,.11,0,
+  roadLine
  );
 }
 
 
-/* =========================================================
+/* =====================================================
    CROSSWALK
-========================================================= */
+===================================================== */
 
-function crosswalk(x,z){
+function crosswalkZ(
+ x,z
+){
 
  for(
   let i=-5;
@@ -402,57 +399,98 @@ function crosswalk(x,z){
  ){
 
   box(
-   1.2,.05,7,
-   0xf1f1f1,
-   x+i*1.8,.12,z
+   1.1,.05,7,
+   0xf3f3f3,
+   x+i*1.75,
+   .12,
+   z
   );
  }
 }
 
-crosswalk(15,0);
-crosswalk(-15,0);
+
+function crosswalkX(
+ x,z
+){
+
+ for(
+  let i=-5;
+  i<=5;
+  i++
+ ){
+
+  box(
+   7,.05,1.1,
+   0xf3f3f3,
+   x,
+   .12,
+   z+i*1.75
+  );
+ }
+}
 
 
-/* =========================================================
-   BUILDINGS
-========================================================= */
+crosswalkZ(17,0);
+crosswalkZ(-17,0);
 
-const colors=[
-  0x5b6670,
-  0x806452,
-  0x526a74,
-  0x786080,
-  0x65735f,
-  0x95705a,
-  0x535b65,
-  0x827c70
+crosswalkX(0,17);
+crosswalkX(0,-17);
+
+
+/* =====================================================
+   BUILDING
+===================================================== */
+
+const buildingColors=[
+  0x56616b,
+  0x80634f,
+  0x526975,
+  0x755d7d,
+  0x64745d,
+  0x92705b,
+  0x4f5963,
+  0x81796c
 ];
+
+
+const glass=
+new THREE.MeshStandardMaterial({
+ color:0x9ed8ec,
+ roughness:.25,
+ metalness:.15,
+ emissive:0x193e4a,
+ emissiveIntensity:.25
+});
 
 
 function building(x,z){
 
  const w=
-  18+Math.random()*14;
+  19+
+  Math.random()*14;
 
  const d=
-  18+Math.random()*14;
+  19+
+  Math.random()*14;
 
  const h=
-  12+Math.random()*35;
+  14+
+  Math.random()*38;
 
- const c=
-  colors[
+ const color=
+  buildingColors[
    Math.floor(
-    Math.random()*colors.length
+    Math.random()*
+    buildingColors.length
    )
   ];
 
 
- /* main */
+ /* main building */
 
  box(
   w,h,d,
-  c,
+  color,
   x,h/2,z
  );
 
@@ -460,21 +498,13 @@ function building(x,z){
  /* roof */
 
  box(
-  w+.5,.45,d+.5,
-  0x30353a,
+  w+.6,.45,d+.6,
+  0x30343a,
   x,h+.22,z
  );
 
 
- /* windows */
-
- const glass=
- new THREE.MeshStandardMaterial({
-  color:0x9ed5e8,
-  emissive:0x244957,
-  emissiveIntensity:.45
- });
-
+ /* windows front */
 
  for(
   let y=4;
@@ -488,21 +518,40 @@ function building(x,z){
    xx+=4
   ){
 
-   const win=
-   new THREE.Mesh(
-    new THREE.BoxGeometry(
-     1.6,2,.08
-    ),
-    glass
-   );
-
-   win.position.set(
+   box(
+    1.7,2,.08,
+    0x9ed8ec,
     x+xx,
     y,
-    z-d/2-.05
+    z-d/2-.05,
+    glass
    );
+  }
+ }
 
-   scene.add(win);
+
+ /* windows side */
+
+ for(
+  let y=4;
+  y<h-2;
+  y+=5
+ ){
+
+  for(
+   let zz=-d/2+3;
+   zz<d/2-2;
+   zz+=4
+  ){
+
+   box(
+    .08,2,1.7,
+    0x9ed8ec,
+    x-w/2-.05,
+    y,
+    z+zz,
+    glass
+   );
   }
  }
 
@@ -510,11 +559,26 @@ function building(x,z){
  /* entrance */
 
  box(
-  3.5,4,.18,
+  3.5,4,.2,
   0x202428,
   x,2,
   z+d/2+.1
  );
+
+
+ /* awnings */
+
+ if(
+  Math.random()>.35
+ ){
+
+  box(
+   5,.35,1.7,
+   0x42474b,
+   x,4.5,
+   z+d/2+.8
+  );
+ }
 
 
  /* balconies */
@@ -524,40 +588,57 @@ function building(x,z){
  ){
 
   for(
-   let y=5;
-   y<h-2;
+   let y=6;
+   y<h-3;
    y+=7
   ){
 
    box(
-    w*.55,.15,2,
-    0x555a5e,
-    x,y,z+d/2+1
+    w*.55,.18,2,
+    0x555b60,
+    x,y,
+    z+d/2+1
    );
   }
+ }
+
+
+ /* rooftop machine */
+
+ if(
+  Math.random()>.3
+ ){
+
+  box(
+   3,2,3,
+   0x42484d,
+   x,
+   h+1.2,
+   z
+  );
  }
 }
 
 
-/* =========================================================
-   CITY GRID
-========================================================= */
+/* =====================================================
+   CITY
+===================================================== */
 
 for(
- let x=-160;
- x<=160;
- x+=38
+ let x=-170;
+ x<=170;
+ x+=40
 ){
 
  for(
-  let z=-160;
-  z<=160;
-  z+=38
+  let z=-170;
+  z<=170;
+  z+=40
  ){
 
   if(
-   Math.abs(x)<32 ||
-   Math.abs(z)<32
+   Math.abs(x)<35 ||
+   Math.abs(z)<35
   ) continue;
 
   building(x,z);
@@ -565,72 +646,198 @@ for(
 }
 
 
-/* =========================================================
-   SHOPS
-========================================================= */
+/* =====================================================
+   STORE FRONTS
+===================================================== */
 
-function shop(
+function store(
  x,z,
- mainColor,
- signColor
+ color
 ){
 
  box(
-  18,8,14,
-  mainColor,
+  20,8,15,
+  color,
   x,4,z
  );
 
  box(
-  14,2.5,.15,
-  signColor,
-  x,6,z-7.1
+  15,2.2,.18,
+  0xffd36b,
+  x,6,z-7.6
  );
 
  box(
-  5,3,.2,
+  4,3,.12,
+  0x8bcfe1,
+  x-5,2.8,z-7.65
+ );
+
+ box(
+  4,3,.12,
+  0x8bcfe1,
+  x+5,2.8,z-7.65
+ );
+
+ box(
+  4,3,.2,
   0x202428,
-  x,1.5,z-7.2
- );
-
- /* display windows */
-
- box(
-  3,3,.1,
-  0x8fc8dc,
-  x-5,2.8,z-7.15
- );
-
- box(
-  3,3,.1,
-  0x8fc8dc,
-  x+5,2.8,z-7.15
+  x,1.5,z-7.7
  );
 }
 
 
-shop(
- 35,35,
- 0xb7463e,
- 0xf0ce70
+store(
+ 40,40,
+ 0xb84c42
 );
 
-shop(
- -35,-35,
- 0x326da2,
- 0xf0d36f
+store(
+ -40,-40,
+ 0x356fa3
 );
 
-shop(
- 125,0,
- 0x4e8755,
- 0xffd86a
+store(
+ 130,0,
+ 0x4f8956
+);
+
+store(
+ -130,0,
+ 0x8a5a9a
 );
 
 
-/* =========================================================
-   TREES
-========================================================= */
+/* =====================================================
+   PARK
+===================================================== */
+
+function bench(x,z,rot=0){
+
+ const b=
+ new THREE.Group();
+
+ const seat=
+ new THREE.Mesh(
+  new THREE.BoxGeometry(
+   3,.25,1
+  ),
+  M(0x765035)
+ );
+
+ seat.position.y=1;
+
+ b.add(seat);
+
+
+ const back=
+ new THREE.Mesh(
+  new THREE.BoxGeometry(
+   3,1,.18
+  ),
+  M(0x765035)
+ );
+
+ back.position.set(
+  0,1.45,.4
+ );
+
+ b.add(back);
+
+ b.position.set(
+  x,0,z
+ );
+
+ b.rotation.y=rot;
+
+ scene.add(b);
+}
+
+
+function park(){
+
+ const grass=
+ new THREE.Mesh(
+  new THREE.PlaneGeometry(
+   52,52
+  ),
+  M(0x4e8949)
+ );
+
+ grass.rotation.x=
+  -Math.PI/2;
+
+ grass.position.set(
+  125,.02,125
+ );
+
+ grass.receiveShadow=true;
+
+ scene.add(grass);
+
+
+ for(
+  let i=0;
+  i<16;
+  i++
+ ){
+
+  const x=
+   105+Math.random()*40;
+
+  const z=
+   105+Math.random()*40;
+
+  tree(x,z);
+ }
+
+
+ bench(
+  115,120
+ );
+
+ bench(
+  130,130,
+  Math.PI/2
+ );
+
+
+ /* fountain */
+
+ const base=
+ new THREE.Mesh(
+  new THREE.CylinderGeometry(
+   5,5,.5,32
+  ),
+  M(0x777b80)
+ );
+
+ base.position.set(
+  125,.25,125
+ );
+
+ scene.add(base);
+
+
+ const water=
+ new THREE.Mesh(
+  new THREE.CylinderGeometry(
+   3.8,3.8,.12,32
+  ),
+  M(0x4bb7d5)
+ );
+
+ water.position.set(
+  125,.55,125
+ );
+
+ scene.add(water);
+}
+
+
+/* =====================================================
+   TREE
+===================================================== */
 
 function tree(x,z){
 
@@ -643,9 +850,9 @@ function tree(x,z){
  const crown=
  new THREE.Mesh(
   new THREE.SphereGeometry(
-   3.4,14,12
+   3.5,15,12
   ),
-  material(0x245d30)
+  M(0x285f32)
  );
 
  crown.position.set(
@@ -658,44 +865,55 @@ function tree(x,z){
 }
 
 
+park();
+
+
 for(
  let i=0;
- i<110;
+ i<100;
  i++
 ){
 
  const x=
-  (Math.random()-.5)*340;
+  (Math.random()-.5)*360;
 
  const z=
-  (Math.random()-.5)*340;
+  (Math.random()-.5)*360;
 
  if(
-  Math.abs(x)<20 ||
-  Math.abs(z)<20
+  Math.abs(x)<22 ||
+  Math.abs(z)<22
+ ) continue;
+
+ if(
+  x>100 &&
+  x<150 &&
+  z>100 &&
+  z<150
  ) continue;
 
  tree(x,z);
 }
 
 
-/* =========================================================
-   STREET LIGHT
-========================================================= */
+/* =====================================================
+   STREET LAMPS
+===================================================== */
 
-function streetLight(x,z){
+function lamp(x,z){
 
  box(
   .18,6,.18,
-  0x25272a,
+  0x25282b,
   x,3,z
  );
 
  box(
   1.6,.18,.18,
-  0x25272a,
+  0x25282b,
   x+.7,5.7,z
  );
+
 
  const light=
  new THREE.Mesh(
@@ -705,7 +923,7 @@ function streetLight(x,z){
   new THREE.MeshStandardMaterial({
    color:0xffe8a5,
    emissive:0xffca45,
-   emissiveIntensity:1.3
+   emissiveIntensity:1.4
   })
  );
 
@@ -720,106 +938,101 @@ function streetLight(x,z){
 
 
 for(
- let i=-170;
- i<=170;
- i+=28
+ let i=-180;
+ i<=180;
+ i+=30
 ){
 
- streetLight(
-  16,i
- );
-
- streetLight(
-  -16,i
- );
+ lamp(18,i);
+ lamp(-18,i);
+ lamp(i,18);
+ lamp(i,-18);
 }
 
 
-/* =========================================================
-   PLAYER
-========================================================= */
+/* =====================================================
+   TRAFFIC LIGHT
+===================================================== */
 
-const player=
-new THREE.Group();
+function trafficLight(x,z){
 
+ box(
+  .25,5,.25,
+  0x24272a,
+  x,2.5,z
+ );
 
-const body=
-new THREE.Mesh(
- new THREE.BoxGeometry(
-  1.3,1.65,.85
- ),
- material(0x1974d2)
-);
-
-body.position.y=1.3;
-body.castShadow=true;
-
-player.add(body);
+ box(
+  .9,2.4,.9,
+  0x151719,
+  x,5.2,z
+ );
 
 
-const head=
-new THREE.Mesh(
- new THREE.SphereGeometry(
-  .56,18,14
- ),
- material(0xf0b48a)
-);
-
-head.position.y=2.6;
-
-player.add(head);
-
-
-const hair=
-new THREE.Mesh(
- new THREE.SphereGeometry(
-  .58,18,8,
-  0,Math.PI*2,
-  0,Math.PI*.48
- ),
- material(0x161616)
-);
-
-hair.position.y=2.84;
-
-player.add(hair);
-
-
-function leg(x){
-
- const l=
+ const red=
  new THREE.Mesh(
-  new THREE.BoxGeometry(
-   .38,1.05,.45
+  new THREE.SphereGeometry(
+   .18,10,8
   ),
-  material(0x20242a)
+  new THREE.MeshStandardMaterial({
+   color:0xff2020,
+   emissive:0xff2020,
+   emissiveIntensity:1
+  })
  );
 
- l.position.set(
-  x,.52,0
+ red.position.set(
+  x,5.8,z
  );
 
- l.castShadow=true;
-
- player.add(l);
+ scene.add(red);
 }
 
-leg(-.3);
-leg(.3);
+
+trafficLight(12,12);
+trafficLight(-12,-12);
 
 
-player.position.set(
- 0,0,25
-);
+/* =====================================================
+   BENCHES / BINS / STREET DETAILS
+===================================================== */
 
-scene.add(player);
+function bin(x,z){
+
+ const b=
+ new THREE.Mesh(
+  new THREE.CylinderGeometry(
+   .55,.65,1.4,12
+  ),
+  M(0x394047)
+ );
+
+ b.position.set(
+  x,.7,z
+ );
+
+ b.castShadow=true;
+
+ scene.add(b);
+}
 
 
-/* =========================================================
+for(
+ let i=-160;
+ i<=160;
+ i+=25
+){
+
+ bin(20,i);
+ bin(-20,i);
+}
+
+
+/* =====================================================
    CAR
-========================================================= */
+===================================================== */
 
-function createCar(
+function carModel(
  color,x,z
 ){
 
@@ -830,12 +1043,14 @@ function createCar(
  const body=
  new THREE.Mesh(
   new THREE.BoxGeometry(
-   4.5,1.25,7.2
+   4.5,1.25,7.3
   ),
-  material(color)
+  M(color)
  );
 
  body.position.y=1;
+
+ body.castShadow=true;
 
  car.add(body);
 
@@ -843,28 +1058,50 @@ function createCar(
  const cabin=
  new THREE.Mesh(
   new THREE.BoxGeometry(
-   3.2,1.2,3.3
+   3.15,1.25,3.35
   ),
-  material(0x20282e)
+  M(0x1e282e)
  );
 
  cabin.position.set(
-  0,1.9,-.2
+  0,1.9,-.15
  );
 
  car.add(cabin);
 
 
+ /* windows */
+
+ const windowMat=
+ new THREE.MeshStandardMaterial({
+  color:0x9bc8d8,
+  roughness:.15,
+  metalness:.2
+ });
+
+
+ box(
+  2.7,.8,.06,
+  0x9bc8d8,
+  x,
+  1.95,
+  z-1.86,
+  windowMat
+ );
+
+
  /* headlights */
 
  for(
-  const x of[-1.4,1.4]
+  const xx of[-1.4,1.4]
  ){
 
   box(
-   .55,.3,.12,
-   0xfff1bb,
-   x,.95,-3.65
+   .55,.28,.12,
+   0xfff0b0,
+   x+xx,
+   .95,
+   z-3.7
   );
  }
 
@@ -872,26 +1109,26 @@ function createCar(
  /* wheels */
 
  for(
-  const x of[-1.9,1.9]
+  const xx of[-1.9,1.9]
  ){
 
   for(
-   const z of[-2.3,2.3]
+   const zz of[-2.3,2.3]
   ){
 
    const wheel=
    new THREE.Mesh(
     new THREE.CylinderGeometry(
-     .68,.68,.5,16
+     .7,.7,.5,16
     ),
-    material(0x101010)
+    M(0x111111)
    );
 
    wheel.rotation.z=
     Math.PI/2;
 
    wheel.position.set(
-    x,.55,z
+    xx,.55,zz
    );
 
    car.add(wheel);
@@ -909,33 +1146,35 @@ function createCar(
 }
 
 
+/* player car */
+
 const playerCar=
-createCar(
- 0xd8323c,
+carModel(
+ 0xd9343f,
  8,25
 );
 
 
-/* =========================================================
+/* =====================================================
    TRAFFIC
-========================================================= */
+===================================================== */
 
 const traffic=[];
 
-const trafficColors=[
-  0x2668c7,
-  0xdba72b,
+const colorsCars=[
+  0x2769c9,
+  0xd9a72b,
   0x2a9a59,
-  0x7a43b6,
-  0xe35435,
-  0xd9d9d9,
-  0x24272b
+  0x7a45b4,
+  0xe45c37,
+  0xd5d5d5,
+  0x25282c
 ];
 
 
 for(
  let i=0;
- i<22;
+ i<28;
  i++
 ){
 
@@ -947,31 +1186,31 @@ for(
  if(horizontal){
 
   x=
-   (Math.random()-.5)*320;
+   (Math.random()-.5)*340;
 
   z=
    Math.random()>.5?
-   4:
-   -4;
+   5:
+   -5;
 
  }else{
 
   x=
    Math.random()>.5?
-   4:
-   -4;
+   5:
+   -5;
 
   z=
-   (Math.random()-.5)*320;
+   (Math.random()-.5)*340;
  }
 
 
  const car=
- createCar(
-  trafficColors[
+ carModel(
+  colorsCars[
    Math.floor(
     Math.random()*
-    trafficColors.length
+    colorsCars.length
    )
   ],
   x,z
@@ -981,105 +1220,184 @@ for(
  traffic.push({
   car,
   horizontal,
-  speed:
-   4+Math.random()*6,
   dir:
    Math.random()>.5?
-   1:-1
+   1:-1,
+  speed:
+   3+Math.random()*7
  });
 }
 
 
-/* =========================================================
+/* =====================================================
    NPC
-========================================================= */
+===================================================== */
 
 const npcs=[];
 
 
-function createNPC(x,z){
+function npc(x,z){
 
- const n=
+ const person=
  new THREE.Group();
 
 
  const clothes=[
-  0x245db5,
-  0xa64646,
+  0x2764ae,
+  0xa74747,
   0x397c52,
-  0x7652a2,
-  0x9b773e,
-  0x30353a
+  0x7550a1,
+  0x9b753f,
+  0x30343a,
+  0xd07b3d
  ];
 
 
- const b=
+ const body=
  new THREE.Mesh(
   new THREE.BoxGeometry(
-   1,1.5,.7
+   1,1.55,.7
   ),
-  material(
+  M(
    clothes[
     Math.floor(
-     Math.random()*clothes.length
+     Math.random()*
+     clothes.length
     )
    ]
   )
  );
 
- b.position.y=1.1;
+ body.position.y=1.1;
 
- n.add(b);
+ person.add(body);
 
 
- const h=
+ const head=
  new THREE.Mesh(
   new THREE.SphereGeometry(
-   .44,12,10
+   .45,14,11
   ),
-  material(0xe0a27d)
+  M(0xe0a17d)
  );
 
- h.position.y=2.25;
+ head.position.y=2.25;
 
- n.add(h);
+ person.add(head);
 
 
- n.position.set(
+ person.position.set(
   x,0,z
  );
 
- scene.add(n);
+ scene.add(person);
 
 
  npcs.push({
-  object:n,
+  object:person,
   angle:
    Math.random()*Math.PI*2,
   speed:
-   .5+Math.random()*1.2
+   .4+Math.random()*1.2
  });
 }
 
 
 for(
  let i=0;
- i<45;
+ i<55;
  i++
 ){
 
- createNPC(
-  (Math.random()-.5)*280,
-  (Math.random()-.5)*280
+ npc(
+  (Math.random()-.5)*300,
+  (Math.random()-.5)*300
  );
 }
 
 
-/* =========================================================
-   JOYSTICK
-========================================================= */
+/* =====================================================
+   PLAYER
+===================================================== */
 
-const joy=
+const player=
+new THREE.Group();
+
+
+const pbody=
+new THREE.Mesh(
+ new THREE.BoxGeometry(
+  1.3,1.65,.85
+ ),
+ M(0x1973d1)
+);
+
+pbody.position.y=1.3;
+
+player.add(pbody);
+
+
+const phead=
+new THREE.Mesh(
+ new THREE.SphereGeometry(
+  .56,18,14
+ ),
+ M(0xf0b48a)
+);
+
+phead.position.y=2.6;
+
+player.add(phead);
+
+
+const phair=
+new THREE.Mesh(
+ new THREE.SphereGeometry(
+  .58,18,8,
+  0,Math.PI*2,
+  0,Math.PI*.48
+ ),
+ M(0x151515)
+);
+
+phair.position.y=2.84;
+
+player.add(phair);
+
+
+function pleg(x){
+
+ const l=
+ new THREE.Mesh(
+  new THREE.BoxGeometry(
+   .38,1.05,.45
+  ),
+  M(0x20242a)
+ );
+
+ l.position.set(
+  x,.52,0
+ );
+
+ player.add(l);
+}
+
+pleg(-.3);
+pleg(.3);
+
+
+player.position.set(
+ 0,0,25
+);
+
+scene.add(player);
+
+
+/* =====================================================
+   JOYSTICK
+===================================================== */
+
+const joystick=
 document.getElementById(
  "joystick"
 );
@@ -1093,43 +1411,45 @@ let joyX=0;
 let joyY=0;
 let joyId=null;
 
-const maxJoy=45;
+const JR=45;
 
 
-function moveJoy(
+function joystickMove(
  x,y
 ){
 
  const r=
-  joy.getBoundingClientRect();
+  joystick.getBoundingClientRect();
 
  let dx=
-  x-(r.left+r.width/2);
+  x-
+  (r.left+r.width/2);
 
  let dy=
-  y-(r.top+r.height/2);
+  y-
+  (r.top+r.height/2);
 
  const len=
   Math.hypot(dx,dy);
 
- if(len>maxJoy){
+ if(len>JR){
 
   dx=
-   dx/len*maxJoy;
+   dx/len*JR;
 
   dy=
-   dy/len*maxJoy;
+   dy/len*JR;
  }
 
- joyX=dx/maxJoy;
- joyY=dy/maxJoy;
+ joyX=dx/JR;
+ joyY=dy/JR;
 
  stick.style.transform=
   `translate(${dx}px,${dy}px)`;
 }
 
 
-joy.addEventListener(
+joystick.addEventListener(
  "touchstart",
  e=>{
 
@@ -1138,7 +1458,7 @@ joy.addEventListener(
 
   joyId=t.identifier;
 
-  moveJoy(
+  joystickMove(
    t.clientX,
    t.clientY
   );
@@ -1147,7 +1467,7 @@ joy.addEventListener(
 );
 
 
-joy.addEventListener(
+joystick.addEventListener(
  "touchmove",
  e=>{
 
@@ -1162,7 +1482,7 @@ joy.addEventListener(
     joyId
    ){
 
-    moveJoy(
+    joystickMove(
      t.clientX,
      t.clientY
     );
@@ -1173,13 +1493,14 @@ joy.addEventListener(
 );
 
 
-joy.addEventListener(
+joystick.addEventListener(
  "touchend",
- e=>{
+ ()=>{
+
+  joyId=null;
 
   joyX=0;
   joyY=0;
-  joyId=null;
 
   stick.style.transform=
    "translate(0,0)";
@@ -1187,9 +1508,9 @@ joy.addEventListener(
 );
 
 
-/* =========================================================
-   CAMERA SWIPE
-========================================================= */
+/* =====================================================
+   CAMERA TOUCH
+===================================================== */
 
 const look=
 document.getElementById(
@@ -1197,7 +1518,6 @@ document.getElementById(
 );
 
 let lookId=null;
-
 let lastX=0;
 let lastY=0;
 
@@ -1269,9 +1589,9 @@ look.addEventListener(
 );
 
 
-/* =========================================================
+/* =====================================================
    MOVEMENT
-========================================================= */
+===================================================== */
 
 let driving=false;
 
@@ -1326,6 +1646,7 @@ function updateMovement(dt){
   movement.lengthSq()<.001
  ) return;
 
+
  movement.normalize();
 
 
@@ -1368,12 +1689,12 @@ function updateMovement(dt){
 }
 
 
-/* =========================================================
+/* =====================================================
    CAR BUTTON
-========================================================= */
+===================================================== */
 
 document
-.getElementById("car")
+.getElementById("carButton")
 .addEventListener(
  "click",
  ()=>{
@@ -1394,14 +1715,9 @@ document
    player.visible=false;
 
    document.getElementById(
-    "car"
+    "carButton"
    ).innerHTML=
     "🚶<br>EXIT";
-
-   document.getElementById(
-    "mission"
-   ).textContent=
-    "🚗 Drive around the city";
 
   }else if(driving){
 
@@ -1416,7 +1732,7 @@ document
    player.position.x+=3;
 
    document.getElementById(
-    "car"
+    "carButton"
    ).innerHTML=
     "🚗<br>CAR";
   }
@@ -1424,40 +1740,9 @@ document
 );
 
 
-/* =========================================================
-   ACTION
-========================================================= */
-
-let wanted=0;
-
-document
-.getElementById("action")
-.addEventListener(
- "click",
- ()=>{
-
-  wanted=
-   Math.min(
-    wanted+1,
-    5
-   );
-
-  document.getElementById(
-   "stats"
-  ).innerHTML=
-   `❤️ 100 &nbsp; 💵 $250 &nbsp; ⭐ ${wanted}`;
-
-  document.getElementById(
-   "mission"
-  ).textContent=
-   "⚠️ Wanted level increased!";
- }
-);
-
-
-/* =========================================================
+/* =====================================================
    TRAFFIC AI
-========================================================= */
+===================================================== */
 
 function updateTraffic(dt){
 
@@ -1473,14 +1758,14 @@ function updateTraffic(dt){
     dt;
 
    if(
-    t.car.position.x>190
+    t.car.position.x>210
    )
-    t.car.position.x=-190;
+    t.car.position.x=-210;
 
    if(
-    t.car.position.x<-190
+    t.car.position.x<-210
    )
-    t.car.position.x=190;
+    t.car.position.x=210;
 
    t.car.rotation.y=
     t.dir>0?
@@ -1495,14 +1780,14 @@ function updateTraffic(dt){
     dt;
 
    if(
-    t.car.position.z>190
+    t.car.position.z>210
    )
-    t.car.position.z=-190;
+    t.car.position.z=-210;
 
    if(
-    t.car.position.z<-190
+    t.car.position.z<-210
    )
-    t.car.position.z=190;
+    t.car.position.z=210;
 
    t.car.rotation.y=
     t.dir>0?
@@ -1513,9 +1798,9 @@ function updateTraffic(dt){
 }
 
 
-/* =========================================================
+/* =====================================================
    NPC AI
-========================================================= */
+===================================================== */
 
 function updateNPCs(dt){
 
@@ -1538,36 +1823,36 @@ function updateNPCs(dt){
    dt;
 
   if(
-   n.object.position.x>165
+   n.object.position.x>175
   )
-   n.object.position.x=-165;
+   n.object.position.x=-175;
 
   if(
-   n.object.position.x<-165
+   n.object.position.x<-175
   )
-   n.object.position.x=165;
+   n.object.position.x=175;
 
   if(
-   n.object.position.z>165
+   n.object.position.z>175
   )
-   n.object.position.z=-165;
+   n.object.position.z=-175;
 
   if(
-   n.object.position.z<-165
+   n.object.position.z<-175
   )
-   n.object.position.z=165;
+   n.object.position.z=175;
  }
 }
 
 
-/* =========================================================
+/* =====================================================
    CAMERA
-========================================================= */
+===================================================== */
 
 const camPos=
 new THREE.Vector3();
 
-const target=
+const camTarget=
 new THREE.Vector3();
 
 
@@ -1608,20 +1893,48 @@ function updateCamera(){
  );
 
 
- target.set(
+ camTarget.set(
   focus.position.x,
   focus.position.y+1.3,
   focus.position.z
  );
 
 
- camera.lookAt(target);
+ camera.lookAt(
+  camTarget
+ );
 }
 
 
-/* =========================================================
-   GAME LOOP
-========================================================= */
+/* =====================================================
+   ACTION
+===================================================== */
+
+let wanted=0;
+
+document
+.getElementById("action")
+.addEventListener(
+ "click",
+ ()=>{
+
+  wanted=
+   Math.min(
+    5,
+    wanted+1
+   );
+
+  document.getElementById(
+   "stats"
+  ).innerHTML=
+   `❤️ 100 &nbsp; 💵 $250 &nbsp; ⭐ ${wanted}`;
+ }
+);
+
+
+/* =====================================================
+   LOOP
+===================================================== */
 
 const clock=
 new THREE.Clock();
@@ -1654,9 +1967,9 @@ function animate(){
 animate();
 
 
-/* =========================================================
+/* =====================================================
    RESIZE
-========================================================= */
+===================================================== */
 
 window.addEventListener(
  "resize",
