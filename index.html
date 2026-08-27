@@ -2,42 +2,50 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
-<title>Car Test</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GTA Car Test</title>
 
 <style>
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#87b9dc;
+ margin:0;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+ background:#87b9dc;
 }
-
 canvas{
-  display:block;
+ display:block;
+}
+#msg{
+ position:fixed;
+ top:20px;
+ left:20px;
+ color:white;
+ background:#000b;
+ padding:12px 16px;
+ border-radius:10px;
+ font-family:Arial;
+ z-index:5;
 }
 </style>
 </head>
 
 <body>
 
+<div id="msg">🚗 Loading car...</div>
+
 <script type="module">
 
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
-import {GLTFLoader}
-from
+import {GLTFLoader} from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
 
 
 /* SCENE */
 
-const scene =
-new THREE.Scene();
+const scene = new THREE.Scene();
 
 scene.background =
 new THREE.Color(0x87b9dc);
@@ -49,14 +57,8 @@ const camera =
 new THREE.PerspectiveCamera(
  45,
  innerWidth/innerHeight,
- .1,
- 1000
-);
-
-camera.position.set(
- 6,
- 4,
- 8
+ 0.01,
+ 5000
 );
 
 
@@ -85,26 +87,24 @@ document.body.appendChild(
 
 /* LIGHT */
 
-const light =
-new THREE.HemisphereLight(
- 0xffffff,
- 0x444444,
- 3
+scene.add(
+ new THREE.HemisphereLight(
+  0xffffff,
+  0x333333,
+  4
+ )
 );
-
-scene.add(light);
-
 
 const sun =
 new THREE.DirectionalLight(
- 0xffffff,
- 4
+  0xffffff,
+  5
 );
 
 sun.position.set(
- 5,
- 10,
- 5
+  10,
+  20,
+  10
 );
 
 sun.castShadow=true;
@@ -117,8 +117,8 @@ scene.add(sun);
 const ground =
 new THREE.Mesh(
  new THREE.PlaneGeometry(
-  100,
-  100
+  200,
+  200
  ),
  new THREE.MeshStandardMaterial({
   color:0x427747
@@ -133,9 +133,7 @@ ground.receiveShadow=true;
 scene.add(ground);
 
 
-/* ==================================================
-   LOAD YOUR car.glb
-================================================== */
+/* CAR */
 
 const loader =
 new GLTFLoader();
@@ -145,13 +143,36 @@ loader.load(
 
  "./car.glb",
 
- function(gltf){
+ (gltf)=>{
 
    const car =
    gltf.scene;
 
 
-   /* ავტომატურად ვპოულობთ ზომას */
+   /* add first */
+
+   scene.add(car);
+
+
+   /* shadows */
+
+   car.traverse(
+     obj=>{
+
+       if(obj.isMesh){
+
+         obj.castShadow=true;
+         obj.receiveShadow=true;
+
+       }
+
+     }
+   );
+
+
+   /*
+    FIND ORIGINAL SIZE
+   */
 
    const box =
    new THREE.Box3()
@@ -164,7 +185,21 @@ loader.load(
    );
 
 
-   const maxSize =
+   const center =
+   box.getCenter(
+     new THREE.Vector3()
+   );
+
+
+   /*
+    AUTOMATIC SCALE
+
+    No matter how big/small
+    the GLB is, it becomes
+    approximately 6 units.
+   */
+
+   const biggest =
    Math.max(
      size.x,
      size.y,
@@ -172,66 +207,102 @@ loader.load(
    );
 
 
-   /* ავტომატური მასშტაბი */
+   if(biggest>0){
 
-   const scale =
-   5 / maxSize;
+     const scale =
+     6/biggest;
+
+     car.scale.set(
+       scale,
+       scale,
+       scale
+     );
+   }
 
 
-   car.scale.set(
-     scale,
-     scale,
-     scale
-   );
+   /*
+    RECALCULATE BOX
+   */
 
-
-   /* ცენტრში მოთავსება */
-
-   const newBox =
+   const box2 =
    new THREE.Box3()
    .setFromObject(car);
 
 
-   const center =
-   newBox.getCenter(
+   const center2 =
+   box2.getCenter(
      new THREE.Vector3()
    );
 
 
-   car.position.x =
-   -center.x;
+   /*
+    PUT CAR ON GROUND
+   */
 
-   car.position.y =
-   -newBox.min.y;
+   car.position.x -=
+   center2.x;
 
-   car.position.z =
-   -center.z;
+   car.position.y -=
+   box2.min.y;
+
+   car.position.z -=
+   center2.z;
 
 
-   /* shadows */
+   /*
+    CAMERA DISTANCE
+   */
 
-   car.traverse(
-     object=>{
-
-       if(
-         object.isMesh
-       ){
-
-         object.castShadow=true;
-
-         object.receiveShadow=true;
-
-       }
-
-     }
+   const finalSize =
+   box2.getSize(
+     new THREE.Vector3()
    );
 
 
-   scene.add(car);
+   const maxFinal =
+   Math.max(
+     finalSize.x,
+     finalSize.y,
+     finalSize.z
+   );
+
+
+   const distance =
+   maxFinal*2.2;
+
+
+   camera.position.set(
+     distance,
+     maxFinal*.9,
+     distance
+   );
+
+
+   camera.lookAt(
+     0,
+     maxFinal*.45,
+     0
+   );
+
+
+   document
+   .getElementById("msg")
+   .innerHTML=
+   "🚗 CAR LOADED!";
+
+
+   setTimeout(
+     ()=>{
+       document
+       .getElementById("msg")
+       .style.display="none";
+     },
+     1500
+   );
 
 
    console.log(
-     "CAR LOADED!",
+     "CAR SIZE:",
      size
    );
 
@@ -239,22 +310,19 @@ loader.load(
 
  undefined,
 
- function(error){
+ (error)=>{
 
-   console.error(
-     "CAR LOAD ERROR:",
-     error
-   );
+   document
+   .getElementById("msg")
+   .innerHTML=
+   "❌ car.glb ვერ ჩაიტვირთა";
 
-   document.body.innerHTML=
-   "<h1 style='color:white;text-align:center;margin-top:40px'>"+
-   "❌ car.glb ვერ ჩაიტვირთა"+
-   "</h1>";
+   console.error(error);
  }
 );
 
 
-/* CAMERA */
+/* LOOP */
 
 function animate(){
 
@@ -277,7 +345,7 @@ window.addEventListener(
  "resize",
  ()=>{
 
-   camera.aspect=
+   camera.aspect =
    innerWidth/innerHeight;
 
    camera.updateProjectionMatrix();
