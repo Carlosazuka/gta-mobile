@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>City Rush 3D</title>
 
 <style>
 *{
   box-sizing:border-box;
-  -webkit-user-select:none;
   user-select:none;
+  -webkit-user-select:none;
   touch-action:none;
 }
 
@@ -38,7 +38,7 @@ canvas{
   position:absolute;
   top:12px;
   left:12px;
-  color:white;
+  color:#fff;
   background:rgba(0,0,0,.6);
   padding:10px 14px;
   border-radius:12px;
@@ -50,11 +50,10 @@ canvas{
   top:12px;
   left:50%;
   transform:translateX(-50%);
-  color:white;
+  color:#fff;
   background:rgba(0,0,0,.6);
   padding:10px 18px;
   border-radius:12px;
-  font-size:14px;
   white-space:nowrap;
 }
 
@@ -72,13 +71,21 @@ canvas{
 
 #stick{
   position:absolute;
-  width:48px;
-  height:48px;
   left:37px;
   top:37px;
+  width:48px;
+  height:48px;
   border-radius:50%;
-  background:rgba(255,255,255,.78);
-  box-shadow:0 3px 12px rgba(0,0,0,.3);
+  background:rgba(255,255,255,.8);
+}
+
+#cameraArea{
+  position:absolute;
+  right:0;
+  top:0;
+  width:55%;
+  height:100%;
+  pointer-events:auto;
 }
 
 #buttons{
@@ -87,8 +94,8 @@ canvas{
   bottom:25px;
   display:flex;
   gap:12px;
-  align-items:end;
   pointer-events:auto;
+  z-index:5;
 }
 
 .btn{
@@ -96,7 +103,7 @@ canvas{
   height:68px;
   border-radius:50%;
   border:2px solid rgba(255,255,255,.35);
-  background:rgba(0,0,0,.58);
+  background:rgba(0,0,0,.6);
   color:white;
   font-weight:bold;
   font-size:12px;
@@ -105,14 +112,14 @@ canvas{
 #carBtn{
   width:78px;
   height:78px;
-  background:rgba(30,110,255,.7);
+  background:rgba(30,110,255,.72);
 }
 
 #rotate{
   display:none;
   position:fixed;
   inset:0;
-  z-index:99;
+  z-index:100;
   background:#111;
   color:white;
   align-items:center;
@@ -122,15 +129,9 @@ canvas{
   font-weight:bold;
 }
 
-@media (orientation:portrait){
+@media(max-width:700px) and (orientation:portrait){
   #rotate{
     display:flex;
-  }
-}
-
-@media (orientation:landscape){
-  #rotate{
-    display:none;
   }
 }
 </style>
@@ -157,27 +158,38 @@ canvas{
     <div id="stick"></div>
   </div>
 
+  <div id="cameraArea"></div>
+
   <div id="buttons">
-    <button class="btn" id="attack">ATTACK</button>
-    <button class="btn" id="carBtn">🚗<br>CAR</button>
+    <button class="btn" id="attack">
+      ATTACK
+    </button>
+
+    <button class="btn" id="carBtn">
+      🚗<br>CAR
+    </button>
   </div>
 
 </div>
+
 
 <script type="module">
 
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+
 /* =========================
    SCENE
 ========================= */
 
-const scene = new THREE.Scene();
+const scene=new THREE.Scene();
 
-scene.background = new THREE.Color(0x87b9dc);
+scene.background=
+new THREE.Color(0x87b9dc);
 
-scene.fog = new THREE.Fog(
+scene.fog=
+new THREE.Fog(
   0x87b9dc,
   70,
   250
@@ -188,10 +200,10 @@ scene.fog = new THREE.Fog(
    CAMERA
 ========================= */
 
-const camera =
+const camera=
 new THREE.PerspectiveCamera(
   60,
-  innerWidth / innerHeight,
+  innerWidth/innerHeight,
   .1,
   500
 );
@@ -201,7 +213,7 @@ new THREE.PerspectiveCamera(
    RENDERER
 ========================= */
 
-const renderer =
+const renderer=
 new THREE.WebGLRenderer({
   antialias:true
 });
@@ -234,7 +246,7 @@ scene.add(
   )
 );
 
-const sun =
+const sun=
 new THREE.DirectionalLight(
   0xffffff,
   2
@@ -250,25 +262,19 @@ scene.add(sun);
 
 
 /* =========================
-   HELPERS
+   BOX
 ========================= */
 
-function createBox(
-  width,
-  height,
-  depth,
+function box(
+  w,h,d,
   color,
-  x,
-  y,
-  z
+  x,y,z
 ){
 
-  const mesh =
+  const mesh=
   new THREE.Mesh(
     new THREE.BoxGeometry(
-      width,
-      height,
-      depth
+      w,h,d
     ),
     new THREE.MeshStandardMaterial({
       color
@@ -292,7 +298,7 @@ function createBox(
    GROUND
 ========================= */
 
-const ground =
+const ground=
 new THREE.Mesh(
   new THREE.PlaneGeometry(
     260,260
@@ -302,7 +308,7 @@ new THREE.Mesh(
   })
 );
 
-ground.rotation.x =
+ground.rotation.x=
 -Math.PI/2;
 
 ground.receiveShadow=true;
@@ -314,43 +320,16 @@ scene.add(ground);
    ROADS
 ========================= */
 
-const roadColor=0x303238;
+const road=0x303238;
 
-createBox(
-  14,.08,260,
-  roadColor,
-  0,.04,0
-);
+box(14,.08,260,road,0,.04,0);
+box(260,.08,14,road,0,.05,0);
 
-createBox(
-  260,.08,14,
-  roadColor,
-  0,.045,0
-);
+box(10,.08,260,road,55,.05,0);
+box(10,.08,260,road,-55,.05,0);
 
-createBox(
-  10,.08,260,
-  roadColor,
-  55,.05,0
-);
-
-createBox(
-  10,.08,260,
-  roadColor,
-  -55,.05,0
-);
-
-createBox(
-  260,.08,10,
-  roadColor,
-  0,.05,55
-);
-
-createBox(
-  260,.08,10,
-  roadColor,
-  0,.05,-55
-);
+box(260,.08,10,road,0,.05,55);
+box(260,.08,10,road,0,.05,-55);
 
 
 /* =========================
@@ -384,18 +363,15 @@ for(
     ) continue;
 
     const w=
-      16+
-      Math.random()*8;
+      16+Math.random()*8;
 
     const d=
-      16+
-      Math.random()*8;
+      16+Math.random()*8;
 
     const h=
-      8+
-      Math.random()*22;
+      8+Math.random()*22;
 
-    const color=
+    const c=
       buildingColors[
         Math.floor(
           Math.random()*
@@ -403,9 +379,9 @@ for(
         )
       ];
 
-    createBox(
+    box(
       w,h,d,
-      color,
+      c,
       x,h/2,z
     );
   }
@@ -416,15 +392,15 @@ for(
    TREES
 ========================= */
 
-function createTree(x,z){
+function tree(x,z){
 
-  createBox(
+  box(
     1.2,4,1.2,
     0x65462e,
     x,2,z
   );
 
-  const crown =
+  const crown=
   new THREE.Mesh(
     new THREE.SphereGeometry(
       3.8,12,10
@@ -460,7 +436,7 @@ for(
     Math.abs(z)<15
   ) continue;
 
-  createTree(x,z);
+  tree(x,z);
 }
 
 
@@ -468,10 +444,10 @@ for(
    PLAYER
 ========================= */
 
-const player =
+const player=
 new THREE.Group();
 
-const torso =
+const torso=
 new THREE.Mesh(
   new THREE.BoxGeometry(
     1.2,1.5,.8
@@ -488,7 +464,7 @@ torso.castShadow=true;
 player.add(torso);
 
 
-const head =
+const head=
 new THREE.Mesh(
   new THREE.SphereGeometry(
     .55,16,12
@@ -505,36 +481,38 @@ head.castShadow=true;
 player.add(head);
 
 
-const leg1 =
-createBox(
-  .35,1,.45,
-  0x222222,
-  0,0,0
+const leg1=
+new THREE.Mesh(
+  new THREE.BoxGeometry(
+    .35,1,.45
+  ),
+  new THREE.MeshStandardMaterial({
+    color:0x222222
+  })
 );
-
-scene.remove(leg1);
 
 leg1.position.set(
   -.3,.5,0
 );
 
-leg1.parent=player;
+player.add(leg1);
 
 
-const leg2 =
-createBox(
-  .35,1,.45,
-  0x222222,
-  0,0,0
+const leg2=
+new THREE.Mesh(
+  new THREE.BoxGeometry(
+    .35,1,.45
+  ),
+  new THREE.MeshStandardMaterial({
+    color:0x222222
+  })
 );
-
-scene.remove(leg2);
 
 leg2.position.set(
   .3,.5,0
 );
 
-leg2.parent=player;
+player.add(leg2);
 
 
 player.position.set(
@@ -548,10 +526,10 @@ scene.add(player);
    CAR
 ========================= */
 
-const car =
+const car=
 new THREE.Group();
 
-const carBody =
+const carBody=
 new THREE.Mesh(
   new THREE.BoxGeometry(
     4,1.2,7
@@ -568,7 +546,7 @@ carBody.castShadow=true;
 car.add(carBody);
 
 
-const roof =
+const roof=
 new THREE.Mesh(
   new THREE.BoxGeometry(
     3.2,1.1,3
@@ -593,7 +571,7 @@ for(
     const z of [-2.2,2.2]
   ){
 
-    const wheel =
+    const wheel=
     new THREE.Mesh(
       new THREE.CylinderGeometry(
         .65,.65,.5,16
@@ -625,12 +603,12 @@ scene.add(car);
    JOYSTICK
 ========================= */
 
-const joystick =
+const joystick=
 document.getElementById(
   "joystick"
 );
 
-const stick =
+const stick=
 document.getElementById(
   "stick"
 );
@@ -638,81 +616,63 @@ document.getElementById(
 let joyX=0;
 let joyY=0;
 
-let joystickActive=false;
+let joyTouchId=null;
 
-const MAX_DISTANCE=42;
+const MAX=42;
 
 
-function updateJoystick(
-  clientX,
-  clientY
+function setJoystick(
+  x,y
 ){
 
   const rect=
     joystick.getBoundingClientRect();
 
-  let x=
-    clientX -
+  let dx=
+    x-
     (rect.left+
      rect.width/2);
 
-  let y=
-    clientY -
+  let dy=
+    y-
     (rect.top+
      rect.height/2);
 
-  const distance=
+  const len=
     Math.sqrt(
-      x*x+y*y
+      dx*dx+dy*dy
     );
 
-  if(
-    distance>MAX_DISTANCE
-  ){
+  if(len>MAX){
 
-    x=
-      x/distance*
-      MAX_DISTANCE;
+    dx=
+      dx/len*MAX;
 
-    y=
-      y/distance*
-      MAX_DISTANCE;
+    dy=
+      dy/len*MAX;
   }
 
-  joyX=
-    x/MAX_DISTANCE;
-
-  joyY=
-    y/MAX_DISTANCE;
+  joyX=dx/MAX;
+  joyY=dy/MAX;
 
   stick.style.transform=
-    `translate(${x}px,${y}px)`;
-}
-
-
-function resetJoystick(){
-
-  joystickActive=false;
-
-  joyX=0;
-  joyY=0;
-
-  stick.style.transform=
-    "translate(0,0)";
+    `translate(${dx}px,${dy}px)`;
 }
 
 
 joystick.addEventListener(
   "touchstart",
   e=>{
-    joystickActive=true;
 
-    const t=e.touches[0];
+    const t=e.changedTouches[0];
 
-    updateJoystick(
+    joyTouchId=t.identifier;
+
+    setJoystick(
       t.clientX,
       t.clientY
     );
+
   },
   {passive:false}
 );
@@ -722,17 +682,23 @@ joystick.addEventListener(
   "touchmove",
   e=>{
 
-    if(!joystickActive)
-      return;
-
     e.preventDefault();
 
-    const t=e.touches[0];
+    for(
+      const t of e.changedTouches
+    ){
 
-    updateJoystick(
-      t.clientX,
-      t.clientY
-    );
+      if(
+        t.identifier===
+        joyTouchId
+      ){
+
+        setJoystick(
+          t.clientX,
+          t.clientY
+        );
+      }
+    }
 
   },
   {passive:false}
@@ -741,18 +707,134 @@ joystick.addEventListener(
 
 joystick.addEventListener(
   "touchend",
-  resetJoystick
+  e=>{
+
+    for(
+      const t of e.changedTouches
+    ){
+
+      if(
+        t.identifier===
+        joyTouchId
+      ){
+
+        joyTouchId=null;
+
+        joyX=0;
+        joyY=0;
+
+        stick.style.transform=
+          "translate(0,0)";
+      }
+    }
+
+  }
 );
 
 
 /* =========================
-   CAMERA RELATIVE MOVEMENT
+   CAMERA SWIPE
+========================= */
+
+const cameraArea=
+document.getElementById(
+  "cameraArea"
+);
+
+let cameraTouchId=null;
+
+let lastX=0;
+let lastY=0;
+
+let cameraYaw=0;
+let cameraPitch=.45;
+
+cameraArea.addEventListener(
+  "touchstart",
+  e=>{
+
+    const t=e.changedTouches[0];
+
+    cameraTouchId=
+      t.identifier;
+
+    lastX=t.clientX;
+    lastY=t.clientY;
+
+  },
+  {passive:false}
+);
+
+
+cameraArea.addEventListener(
+  "touchmove",
+  e=>{
+
+    e.preventDefault();
+
+    for(
+      const t of e.changedTouches
+    ){
+
+      if(
+        t.identifier===
+        cameraTouchId
+      ){
+
+        const dx=
+          t.clientX-lastX;
+
+        const dy=
+          t.clientY-lastY;
+
+        lastX=t.clientX;
+        lastY=t.clientY;
+
+        cameraYaw-=dx*.008;
+
+        cameraPitch-=
+          dy*.005;
+
+        cameraPitch=
+          THREE.MathUtils.clamp(
+            cameraPitch,
+            .15,
+            1.05
+          );
+      }
+    }
+
+  },
+  {passive:false}
+);
+
+
+cameraArea.addEventListener(
+  "touchend",
+  e=>{
+
+    for(
+      const t of e.changedTouches
+    ){
+
+      if(
+        t.identifier===
+        cameraTouchId
+      ){
+
+        cameraTouchId=null;
+      }
+    }
+
+  }
+);
+
+
+/* =========================
+   MOVEMENT
 ========================= */
 
 let driving=false;
-
-const moveDirection=
-new THREE.Vector3();
 
 const forward=
 new THREE.Vector3();
@@ -760,137 +842,128 @@ new THREE.Vector3();
 const right=
 new THREE.Vector3();
 
+const move=
+new THREE.Vector3();
 
-function moveCharacter(dt){
+
+function updateMovement(dt){
 
   if(
-    Math.abs(joyX)<.05 &&
-    Math.abs(joyY)<.05
-  ){
-    return;
-  }
+    Math.abs(joyX)<.04 &&
+    Math.abs(joyY)<.04
+  ) return;
+
 
   /*
-    Camera's horizontal forward
+    Camera direction
   */
 
-  camera.getWorldDirection(
-    forward
+  forward.set(
+    -Math.sin(cameraYaw),
+    0,
+    -Math.cos(cameraYaw)
   );
 
-  forward.y=0;
+  right.set(
+    Math.cos(cameraYaw),
+    0,
+    -Math.sin(cameraYaw)
+  );
 
-  forward.normalize();
-
-  /*
-    Camera's right
-  */
-
-  right.crossVectors(
-    forward,
-    new THREE.Vector3(0,1,0)
-  ).normalize();
 
   /*
-    Joystick:
-    up = forward
-    down = backward
-    right = camera right
+    Joystick movement
   */
 
-  moveDirection.set(0,0,0);
+  move.set(0,0,0);
 
-  moveDirection.addScaledVector(
+  move.addScaledVector(
     forward,
     -joyY
   );
 
-  moveDirection.addScaledVector(
+  move.addScaledVector(
     right,
     joyX
   );
 
   if(
-    moveDirection.lengthSq()>0.001
-  ){
+    move.lengthSq()<
+    .001
+  ) return;
 
-    moveDirection.normalize();
+  move.normalize();
 
-    const speed=
-      driving ? 16 : 7;
 
-    if(driving){
+  const speed=
+    driving ? 17 : 7;
 
-      car.position.addScaledVector(
-        moveDirection,
-        speed*dt
-      );
 
-      player.position.copy(
-        car.position
-      );
+  if(driving){
 
-    }else{
+    car.position.addScaledVector(
+      move,
+      speed*dt
+    );
 
-      player.position.addScaledVector(
-        moveDirection,
-        speed*dt
-      );
-    }
+    player.position.copy(
+      car.position
+    );
+
+  }else{
+
+    player.position.addScaledVector(
+      move,
+      speed*dt
+    );
 
     /*
       Character faces movement
     */
 
-    if(!driving){
+    const angle=
+      Math.atan2(
+        move.x,
+        move.z
+      );
 
-      const angle=
-        Math.atan2(
-          moveDirection.x,
-          moveDirection.z
-        );
+    player.rotation.y=
+      THREE.MathUtils.lerp(
+        player.rotation.y,
+        angle,
+        .18
+      );
+  }
 
-      player.rotation.y=
-        THREE.MathUtils.lerp(
-          player.rotation.y,
-          angle,
-          .2
-        );
-    }
 
-    /*
-      Car faces movement
-    */
+  if(driving){
 
-    if(driving){
+    const angle=
+      Math.atan2(
+        move.x,
+        move.z
+      );
 
-      const angle=
-        Math.atan2(
-          moveDirection.x,
-          moveDirection.z
-        );
-
-      car.rotation.y=
-        THREE.MathUtils.lerp(
-          car.rotation.y,
-          angle,
-          .12
-        );
-    }
+    car.rotation.y=
+      THREE.MathUtils.lerp(
+        car.rotation.y,
+        angle,
+        .12
+      );
   }
 }
 
 
 /* =========================
-   CAR ENTER / EXIT
+   CAR BUTTON
 ========================= */
 
-const carButton=
+const carBtn=
 document.getElementById(
   "carBtn"
 );
 
-carButton.addEventListener(
+carBtn.addEventListener(
   "click",
   ()=>{
 
@@ -908,7 +981,7 @@ carButton.addEventListener(
 
       player.visible=false;
 
-      carButton.innerHTML=
+      carBtn.innerHTML=
         "🚶<br>EXIT";
 
       document.getElementById(
@@ -928,7 +1001,7 @@ carButton.addEventListener(
 
       player.position.x+=3;
 
-      carButton.innerHTML=
+      carBtn.innerHTML=
         "🚗<br>CAR";
 
       document.getElementById(
@@ -959,28 +1032,17 @@ document
 
 
 /* =========================
-   CAMERA FOLLOW
-========================= */
-
-const cameraTarget=
-new THREE.Vector3();
-
-const desiredCamera=
-new THREE.Vector3();
-
-const cameraOffset=
-new THREE.Vector3(
-  0,10,15
-);
-
-
-/* =========================
-   GAME LOOP
+   CAMERA
 ========================= */
 
 const clock=
 new THREE.Clock();
 
+const cameraPosition=
+new THREE.Vector3();
+
+const cameraLook=
+new THREE.Vector3();
 
 function animate(){
 
@@ -994,53 +1056,60 @@ function animate(){
       .05
     );
 
-  moveCharacter(dt);
+
+  updateMovement(dt);
+
 
   const target=
     driving ?
     car :
     player;
 
-  cameraTarget.lerp(
-    target.position,
-    .12
-  );
 
   /*
-    Camera stays behind
-    player's movement direction
+    Camera rotates ONLY
+    from right-side swipe
   */
-
-  let targetRotation=
-    driving ?
-    car.rotation.y :
-    player.rotation.y;
 
   const distance=17;
 
-  desiredCamera.set(
-    target.position.x -
-      Math.sin(targetRotation)*
-      distance,
+  const horizontal=
+    Math.cos(cameraPitch)*
+    distance;
+
+  cameraPosition.set(
+    target.position.x+
+      Math.sin(cameraYaw)*
+      horizontal,
 
     target.position.y+
-      9,
+      3+
+      Math.sin(cameraPitch)*
+      distance,
 
-    target.position.z -
-      Math.cos(targetRotation)*
-      distance
+    target.position.z+
+      Math.cos(cameraYaw)*
+      horizontal
   );
+
 
   camera.position.lerp(
-    desiredCamera,
-    .08
+    cameraPosition,
+    .12
   );
 
-  camera.lookAt(
+
+  cameraLook.set(
     target.position.x,
-    target.position.y+1.2,
+    target.position.y+1.3,
     target.position.z
   );
+
+
+  camera.lookAt(
+    cameraLook
+  );
+
 
   renderer.render(
     scene,
